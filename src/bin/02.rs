@@ -14,7 +14,7 @@ impl CubeSet {
         let mut blue: u32 = 0;
 
         for cube_record in set_definition.split(',') {
-            let mut parts = cube_record.trim().split_whitespace();
+            let mut parts = cube_record.split_whitespace();
 
             let value = parts
                 .next()
@@ -57,7 +57,7 @@ impl Game {
             .next()
             .expect("Game record must have an ID")
             .chars()
-            .filter(|c| c.is_digit(10))
+            .filter(char::is_ascii_digit)
             .collect::<String>()
             .parse::<u32>()
             .unwrap();
@@ -66,7 +66,7 @@ impl Game {
             .next()
             .expect("Game record must have cube sets")
             .split(';')
-            .map(|cube_set_record| CubeSet::new(cube_set_record))
+            .map(CubeSet::new)
             .collect::<Vec<CubeSet>>();
 
         Self { id, cube_sets }
@@ -97,7 +97,7 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(
         input
             .lines()
-            .map(|line| Game::new(line))
+            .map(Game::new)
             .filter(|game| game.is_possible(12, 13, 14))
             .map(|game| game.id)
             .sum(),
