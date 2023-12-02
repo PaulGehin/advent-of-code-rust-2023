@@ -18,11 +18,11 @@ impl CubeSet {
 
             let value = parts
                 .next()
-                .expect("Cube record must have a value").parse::<u32>().expect("Cube record value must be a number");
+                .expect("Cube record must have a value")
+                .parse::<u32>()
+                .expect("Cube record value must be a number");
 
-            let color = parts
-                .next()
-                .expect("Cube record must have a color");
+            let color = parts.next().expect("Cube record must have a color");
 
             match color {
                 "red" => red += value,
@@ -32,17 +32,11 @@ impl CubeSet {
             }
         }
 
-        Self {
-            red,
-            green,
-            blue,
-        }
+        Self { red, green, blue }
     }
 
-    pub fn is_possible(&self, max_red: u32, max_green: u32, max_blue: u32, ) -> bool {
-        self.red <= max_red &&
-            self.green <= max_green &&
-            self.blue <= max_blue
+    pub fn is_possible(&self, max_red: u32, max_green: u32, max_blue: u32) -> bool {
+        self.red <= max_red && self.green <= max_green && self.blue <= max_blue
     }
 
     pub fn power(&self) -> u32 {
@@ -75,13 +69,10 @@ impl Game {
             .map(|cube_set_record| CubeSet::new(cube_set_record))
             .collect::<Vec<CubeSet>>();
 
-        Self {
-            id,
-            cube_sets,
-        }
+        Self { id, cube_sets }
     }
 
-    pub fn is_possible(&self, max_red: u32, max_green: u32, max_blue: u32, ) -> bool {
+    pub fn is_possible(&self, max_red: u32, max_green: u32, max_blue: u32) -> bool {
         self.cube_sets
             .iter()
             .all(|cube_set| cube_set.is_possible(max_red, max_green, max_blue))
@@ -98,28 +89,28 @@ impl Game {
             blue = max(blue, cube_set.blue);
         }
 
-        CubeSet {
-            red,
-            green,
-            blue,
-        }
+        CubeSet { red, green, blue }
     }
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
-    Some(input
-        .lines()
-        .map(|line| Game::new(line))
-        .filter(|game| game.is_possible(12, 13, 14))
-        .map(|game| game.id)
-        .sum())
+    Some(
+        input
+            .lines()
+            .map(|line| Game::new(line))
+            .filter(|game| game.is_possible(12, 13, 14))
+            .map(|game| game.id)
+            .sum(),
+    )
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    Some(input
-        .lines()
-        .map(|line| Game::new(line).minimum_set().power())
-        .sum())
+    Some(
+        input
+            .lines()
+            .map(|line| Game::new(line).minimum_set().power())
+            .sum(),
+    )
 }
 
 #[cfg(test)]
