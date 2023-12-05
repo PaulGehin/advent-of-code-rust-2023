@@ -8,13 +8,13 @@ struct Mapping {
 }
 
 struct MappingRange {
-    dest_start: u32,
-    src_start: u32,
-    range: u32,
+    dest_start: u64,
+    src_start: u64,
+    range: u64,
 }
 
 impl MappingRange {
-    pub fn map(&self, value: u32) -> u32 {
+    pub fn map(&self, value: u64) -> u64 {
         if value >= self.src_start && value <= self.src_start + self.range {
             return self.dest_start + (value - self.src_start);
         }
@@ -22,11 +22,15 @@ impl MappingRange {
     }
 }
 
-fn compute(input: &str, mut seeds: Vec<u32>) -> Option<u32> {
+fn extract_seeds_and_mappings(input: &str) -> (Vec<u64>, Vec<Mapping>) {
+    let mut seeds = Vec::new();
     let mut mappings: Vec<Mapping> = Vec::new();
     for line in input.lines() {
         if line.starts_with("seeds: ") {
-            continue;
+            seeds = line.split("seeds: ").collect::<Vec<_>>()[1]
+                .split(' ')
+                .map(|x| x.parse::<u64>().expect("Should be a number"))
+                .collect();
         } else if line.ends_with(" map:") {
             let categories: Vec<&str> = line.split(" map:").collect::<Vec<_>>()[0]
                 .split("-to-")
@@ -37,9 +41,9 @@ fn compute(input: &str, mut seeds: Vec<u32>) -> Option<u32> {
                 ranges: Vec::new(),
             });
         } else if !line.is_empty() {
-            let nums: Vec<u32> = line
+            let nums: Vec<u64> = line
                 .split(' ')
-                .map(|x| x.parse::<u32>().expect("Should be a number"))
+                .map(|x| x.parse::<u64>().expect("Should be a number"))
                 .collect();
             mappings
                 .last_mut()
@@ -52,6 +56,13 @@ fn compute(input: &str, mut seeds: Vec<u32>) -> Option<u32> {
                 });
         }
     }
+    (seeds, mappings)
+}
+
+pub fn part_one(input: &str) -> Option<u64> {
+    let values = extract_seeds_and_mappings(input);
+    let mut seeds = values.0;
+    let mappings = values.1;
 
     let mut current_category = "seed".to_string();
     while current_category != "location" {
@@ -75,38 +86,50 @@ fn compute(input: &str, mut seeds: Vec<u32>) -> Option<u32> {
     seeds.iter().min().copied()
 }
 
-fn extract_seeds(line: &str) -> Vec<u32> {
-    line.split("seeds: ").collect::<Vec<_>>()[1]
-        .split(' ')
-        .map(|x| x.parse::<u32>().expect("Should be a number"))
-        .collect()
-}
-
-pub fn part_one(input: &str) -> Option<u32> {
-    for line in input.lines() {
-        if line.starts_with("seeds: ") {
-            return compute(input, extract_seeds(line));
+fn map_value(mut value: u64, mappings: &Vec<Mapping>) -> u64 {
+    for mapping in mappings {
+        for range in &mapping.ranges {
+            if value >= range.src_start && value < range.src_start + range.range {
+                value = value - range.src_start + range.dest_start;
+                break;
+            }
         }
     }
-    None
+    value
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    for line in input.lines() {
-        if line.starts_with("seeds: ") {
-            let mut seeds: Vec<u32> = Vec::new();
-            let seed_parts: Vec<u32> = extract_seeds(line);
-            for i in (0..seed_parts.len()).step_by(2) {
-                let seed_start = seed_parts[i];
-                let seed_len = seed_parts[i + 1];
-                for j in 0..seed_len {
-                    seeds.push(seed_start + j);
+pub fn part_two(input: &str) -> Option<u64> {
+    let values = extract_seeds_and_mappings(input);
+    let seeds = values.0;
+    let mappings = values.1;
+    let mut min = (u64::MAX, 0);
+
+    for seed in seeds.iter() {
+        min.0 = min.0.min(map_value(*seed, &mappings));
+    }
+
+    'location: loop {
+        let mut value = min.1;
+
+        for mapping in mappings.iter().rev() {
+            for range in &mapping.ranges {
+                if value >= range.dest_start && value < range.dest_start + range.range {
+                    value = value - range.dest_start + range.src_start;
+                    break;
                 }
             }
-            return compute(input, seeds);
         }
+
+        for pair in seeds.chunks(2) {
+            if value >= pair[0] && value < pair[0] + pair[1] {
+                break 'location;
+            }
+        }
+
+        min.1 += 1;
     }
-    None
+
+    Some(min.1)
 }
 
 #[cfg(test)]

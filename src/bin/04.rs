@@ -20,13 +20,7 @@ pub fn point(line: &str) -> usize {
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
-    Some(
-        input
-            .lines()
-            .map(point)
-            .map(|n| 1 << n >> 1)
-            .sum::<u32>(),
-    )
+    Some(input.lines().map(point).map(|n| 1 << n >> 1).sum::<u32>())
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
