@@ -24,8 +24,7 @@ pub fn part_one(input: &str) -> Option<u32> {
         input
             .lines()
             .map(point)
-            .filter(|n| n.ne(&0))
-            .map(|n| i32::pow(2, (n as i32 - 1) as u32) as u32)
+            .map(|n| 1 << n >> 1)
             .sum::<u32>(),
     )
 }
